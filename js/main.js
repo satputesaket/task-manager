@@ -1,5 +1,10 @@
 $(document).ready(function(){
     getTasks();
+    getCategories();
+
+    $("#add_task").on('submit', addTask);
+    $("body").on('click', ".btn-edit-task", setTask);
+
 });
 
 const apiKey='40rTGTJISnh2xBZMV9Q6UQyAqBM1ITcH';
@@ -34,7 +39,11 @@ function getTasks(){
       let div = document.createElement("div");
       div.setAttribute('class','pull-right');
       let atag = document.createElement("a");
-      atag.setAttribute('class','btn btn-primary');
+      atag.setAttribute('class','btn btn-primary btn-edit-task');
+      atag.setAttribute('data-task-name',task.task_name);
+      atag.setAttribute('data-task-id',task._id.$oid);
+
+
       textNode = document.createTextNode("Edit");
       atag.append(textNode);
       div.append(atag);
@@ -52,4 +61,106 @@ function getTasks(){
     $("#tasks").html(unorderedList);
     console.log(data);
   });
+}
+
+function setTask(){
+  let task_id=$(this).data('task-id');
+  sessionStorage.setItem('current_id',task_id);
+  window.location.href="edittasks.html";
+  return false;
+
+
+}
+function getTasksById(id){
+  console.log("get tasks called by "+id);
+  $.get(`https://api.mlab.com/api/1/databases/taskmanager/collections/tasks/${id}?apiKey=${apiKey}`,function(task){
+     $('#task_name').val(task.task_name);
+     $('#categories').val(task.category).attr('selected',true);
+     $('#is_urgent').val(task.is_urgent).attr('selected',true);;
+
+     var d = new Date(Date.parse(task.due_date));
+     date = [
+       d.getFullYear(),
+       ('0' + (d.getMonth() + 1)).slice(-2),
+       ('0' + d.getDate()).slice(-2)
+      ].join('-');
+
+     console.log(Date.parse(task.due_date));
+     $('#due_date').val(`${date}`);
+
+  });
+}
+
+
+function editTasks(e){
+  let task_id = sessionStorage.getItem('current_id');
+  let task_name = $('#task_name').val();
+  let category = $('#categories').val();
+  let due_date = $('#due_date').val();
+  let is_urgent = $('#is_urgent').val();
+
+  $.ajax({
+    url:`https://api.mlab.com/api/1/databases/taskmanager/collections/tasks/${task_id}?apiKey=${apiKey}`,
+    data:JSON.stringify({
+      "task_name":task_name,
+      "category":category,
+      "due_date":due_date,
+      "is_urgent":is_urgent
+    }),
+    type:'PUT',
+    contentType:"application/json",
+    success:function(data){
+      alert("Added successfully!!");
+      window.location.href="index.html";
+    },
+    error:function(xhr, status, err){
+      console.log(err);
+    }
+  });
+  e.preventDefault();
+  console.log("add task");
+
+}
+
+function addTask(e){
+  let task_name = $('#task_name').val();
+  let category = $('#categories').val();
+  let due_date = $('#due_date').val();
+  let is_urgent = $('#is_urgent').val();
+
+  $.ajax({
+    url:'https://api.mlab.com/api/1/databases/taskmanager/collections/tasks?apiKey='+apiKey,
+    data:JSON.stringify({
+      "task_name":task_name,
+      "category":category,
+      "due_date":due_date,
+      "is_urgent":is_urgent
+    }),
+    type:'POST',
+    contentType:"application/json",
+    success:function(data){
+      alert("Added successfully!!");
+      window.location.href="index.html";
+    },
+    error:function(xhr, status, err){
+      console.log(err);
+    }
+  });
+  e.preventDefault();
+  console.log("add task");
+
+}
+function getCategories(){
+  $.get('https://api.mlab.com/api/1/databases/taskmanager/collections/categories?apiKey='+apiKey,function(data){
+
+    console.log(data);
+    $.each(data, function(key, category){
+      let option = document.createElement("option");
+      option.setAttribute("value",category.category_name);
+      option.append( document.createTextNode(category.category_name));
+      $("#categories").append(option);
+    });
+
+  });
+
 }
