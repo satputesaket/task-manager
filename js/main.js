@@ -4,6 +4,12 @@ $(document).ready(function(){
 
     $("#add_task").on('submit', addTask);
     $("body").on('click', ".btn-edit-task", setTask);
+    $("#edit_task").on('submit', editTasks);
+    $("body").on('click', ".btn-delete-task", deleteTask);
+
+
+
+
 
 });
 
@@ -49,8 +55,10 @@ function getTasks(){
       div.append(atag);
 
       atag = document.createElement("a");
-      atag.setAttribute('class','btn btn-danger');
+      atag.setAttribute('class','btn btn-danger btn-delete-task');
       textNode = document.createTextNode("Delete");
+      atag.setAttribute('data-task-name',task.task_name);
+      atag.setAttribute('data-task-id',task._id.$oid);
       atag.append(textNode);
       div.append(atag);
 
@@ -71,6 +79,29 @@ function setTask(){
 
 
 }
+
+function deleteTask(){
+  let task_id=$(this).data('task-id');
+
+  $.ajax({
+    url:"https://api.mlab.com/api/1/databases/taskmanager/collections/tasks/"+task_id+"?apiKey="+apiKey,
+    async:true,
+    type:'DELETE',
+    contentType:"application/json",
+    success:function(data){
+      alert("DELETED successfully!!");
+      window.location.href="index.html";
+    },
+    error:function(xhr, status, err){
+      console.log(err);
+    }
+  });
+
+
+}
+
+
+
 function getTasksById(id){
   console.log("get tasks called by "+id);
   $.get(`https://api.mlab.com/api/1/databases/taskmanager/collections/tasks/${id}?apiKey=${apiKey}`,function(task){
@@ -93,14 +124,17 @@ function getTasksById(id){
 
 
 function editTasks(e){
+  e.preventDefault();
+
   let task_id = sessionStorage.getItem('current_id');
+  console.log(task_id);
   let task_name = $('#task_name').val();
   let category = $('#categories').val();
   let due_date = $('#due_date').val();
   let is_urgent = $('#is_urgent').val();
 
   $.ajax({
-    url:`https://api.mlab.com/api/1/databases/taskmanager/collections/tasks/${task_id}?apiKey=${apiKey}`,
+    url:"https://api.mlab.com/api/1/databases/taskmanager/collections/tasks/"+task_id+"?apiKey="+apiKey,
     data:JSON.stringify({
       "task_name":task_name,
       "category":category,
@@ -117,7 +151,6 @@ function editTasks(e){
       console.log(err);
     }
   });
-  e.preventDefault();
   console.log("add task");
 
 }
