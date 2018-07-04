@@ -1,16 +1,12 @@
 $(document).ready(function(){
     getTasks();
     getCategories();
-
+    getCategoryOptions();
+    $("#add_category").on('submit', addCategory);
     $("#add_task").on('submit', addTask);
     $("body").on('click', ".btn-edit-task", setTask);
     $("#edit_task").on('submit', editTasks);
     $("body").on('click', ".btn-delete-task", deleteTask);
-
-
-
-
-
 });
 
 const apiKey='40rTGTJISnh2xBZMV9Q6UQyAqBM1ITcH';
@@ -183,7 +179,7 @@ function addTask(e){
   console.log("add task");
 
 }
-function getCategories(){
+function getCategoryOptions(){
   $.get('https://api.mlab.com/api/1/databases/taskmanager/collections/categories?apiKey='+apiKey,function(data){
 
     console.log(data);
@@ -195,5 +191,69 @@ function getCategories(){
     });
 
   });
-
 }
+
+
+  function getCategories(){
+    $.get('https://api.mlab.com/api/1/databases/taskmanager/collections/categories?apiKey='+apiKey,function(data){
+      let unorderedList = document.createElement("ul");
+      unorderedList.setAttribute('class', 'list-group');
+
+      $.each(data, function(key, category){
+        let listItem = document.createElement("li");
+        listItem.setAttribute('class', 'list-group-items');
+        let textNode = document.createTextNode(category.category_name);
+
+        listItem.append(textNode);
+
+        let div = document.createElement("div");
+        div.setAttribute('class','pull-right');
+        let atag = document.createElement("a");
+        atag.setAttribute('class','btn btn-primary btn-edit-category');
+        atag.setAttribute('data-category-name',category.category_name);
+        atag.setAttribute('data-category-id',category._id.$oid);
+
+
+        textNode = document.createTextNode("Edit");
+        atag.append(textNode);
+        div.append(atag);
+
+        atag = document.createElement("a");
+        atag.setAttribute('class','btn btn-danger btn-delete-category');
+        textNode = document.createTextNode("Delete");
+        atag.setAttribute('data-category-name',category.category_name);
+        atag.setAttribute('data-category-id',category._id.$oid);
+        atag.append(textNode);
+        div.append(atag);
+
+        listItem.append(div);
+      //  listItem.append(`<div class='pull-right'><a href='#' class='btn btn-primary'>Edit</a><a href='#' class='btn btn-primary'>Delete</a></div>``);
+        unorderedList.append(listItem);
+      });
+      $("#category").html(unorderedList);
+      console.log(data);
+    });
+  }
+
+  function addCategory(e){
+    let category_name = $('#category_name').val();
+
+    $.ajax({
+      url:'https://api.mlab.com/api/1/databases/taskmanager/collections/categories?apiKey='+apiKey,
+      data:JSON.stringify({
+        "category_name":category_name
+      }),
+      type:'POST',
+      contentType:"application/json",
+      success:function(data){
+        alert("Added successfully!!");
+        window.location.href="categories.html";
+      },
+      error:function(xhr, status, err){
+        console.log(err);
+      }
+    });
+    e.preventDefault();
+    console.log("add task");
+
+  }
