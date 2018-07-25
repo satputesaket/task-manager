@@ -9,6 +9,8 @@ $(document).ready(function(){
     $("body").on('click', ".btn-delete-task", deleteTask);
     $("body").on('click', ".btn-edit-category", setCategory);
     $("#edit_category").on('submit', editCategories);
+    $("body").on('click', ".btn-delete-category", deleteCategory);
+
 
 
 });
@@ -296,5 +298,26 @@ function editCategories(e){
     }
   });
   console.log("add task");
+
+}
+
+
+function deleteCategory(e){
+  let category_id=$(this).data('category-id');
+
+  $.ajax({
+    url:"https://api.mlab.com/api/1/databases/taskmanager/collections/categories/"+category_id+"?apiKey="+apiKey,
+    async:true,
+    type:'DELETE',
+    contentType:"application/json",
+    success:function(data){
+      alert("DELETED successfully!!");
+      window.location.href="categories.html";
+    },
+    error:function(xhr, status, err){
+      console.log(err);
+    }
+  });
+
 
 }
